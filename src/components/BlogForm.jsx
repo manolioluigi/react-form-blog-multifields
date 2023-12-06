@@ -1,43 +1,102 @@
-// src/components/BlogForm/BlogForm.jsx
 import React, { useState } from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import EditModal from './Modal';
 
 const BlogForm = () => {
-    const [title, setTitle] = useState('');
+    const [tagOptions, setTagOptions] = useState(['html', 'css', 'javascript', 'react', 'nodejs', 'mongodb']);
+    const [formData, setFormData] = useState({
+        title: '',
+        image: '',
+        content: '',
+        category: 'uncategorized',
+        tags: [],
+        published: false,
+    });
     const [articles, setArticles] = useState([]);
     const [editingId, setEditingId] = useState(null);
     const [editTitle, setEditTitle] = useState('');
+    const [showModal, setShowModal] = useState(false);
+
+
+    const handleShowModal = () => setShowModal(true);
+    const handleCloseModal = () => setShowModal(false);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            [name]: value,
+        }));
+    };
+
+    const handleCheckboxChange = (tag) => {
+        setFormData((prevFormData) => {
+            const updatedTags = prevFormData.tags.includes(tag)
+                ? prevFormData.tags.filter((t) => t !== tag)
+                : [...prevFormData.tags, tag];
+
+            return {
+                ...prevFormData,
+                tags: updatedTags,
+            };
+        });
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (title.trim() !== '') {
-            setArticles((prevArticles) => [...prevArticles, { id: Date.now(), title }]);
-            setTitle('');
+        if (formData.title.trim() !== '') {
+            setArticles((prevArticles) => [...prevArticles, { id: Date.now(), ...formData }]);
+            setFormData({
+                title: '',
+                image: '',
+                content: '',
+                category: 'uncategorized',
+                tags: [],
+                published: false,
+            });
         }
     };
+
 
     const handleDelete = (id) => {
         setArticles((prevArticles) => prevArticles.filter((article) => article.id !== id));
-        // Reset editing state if the deleted article is being edited
         if (editingId === id) {
             setEditingId(null);
-            setEditTitle('');
         }
     };
 
-    const handleEdit = (id, currentTitle) => {
+    const handleEdit = (id, currentArticle) => {
         setEditingId(id);
-        setEditTitle(currentTitle);
+        setEditTitle(currentArticle.title);
+        setFormData({
+            title: currentArticle.title || '',  // Assicurati che il titolo non sia undefined
+            image: currentArticle.image || '',
+            content: currentArticle.content || '',
+            category: currentArticle.category || 'uncategorized',
+            tags: currentArticle.tags || [],
+            published: currentArticle.published || false,
+        });
+        handleShowModal();
     };
 
-    const handleSaveEdit = (id) => {
+    const handleSaveModalChanges = () => {
         setArticles((prevArticles) =>
             prevArticles.map((article) =>
-                article.id === id ? { ...article, title: editTitle } : article
+                article.id === editingId ? { ...article, ...formData } : article
             )
         );
         setEditingId(null);
-        setEditTitle('');
+        setFormData({
+            title: '',
+            image: '',
+            content: '',
+            category: 'uncategorized',
+            tags: [],
+            published: false,
+        });
+        handleCloseModal();
     };
+
 
     return (
         <div className='my-container d-flex flex-column align-items-center'>
@@ -45,12 +104,41 @@ const BlogForm = () => {
             <div className="row width-full">
                 <div className="col no-padding">
                     <form className='width-full no-padding mb-3' onSubmit={handleSubmit}>
-                        <label className='form-label'>
-                            New Post:
-                        </label>
+                        <label className='form-label mt-3'>Title:</label>
                         <div className='d-flex'>
-
-                            <input type="text" className='form-control' value={title} onChange={(e) => setTitle(e.target.value)} />
+                            <input type="text" className='form-control' name="title" value={formData.title} onChange={handleChange} />
+                        </div>
+                        <label className='form-label mt-3'>Image URL:</label>
+                        <div className='d-flex'>
+                            <input type="text" className='form-control' name="image" value={formData.image} onChange={handleChange} placeholder='https://picsum.photos/200' />
+                        </div>
+                        <label className='form-label mt-3'>Content:</label>
+                        <div className='d-flex'>
+                            <textarea className='form-control' name="content" value={formData.content} onChange={handleChange}></textarea>
+                        </div>
+                        <label className='form-label mt-3'>Category:</label>
+                        <div className='d-flex'>
+                            <select className='form-select' name="category" value={formData.category} onChange={handleChange}>
+                                <option value="uncategorized">Uncategorized</option>
+                            </select>
+                        </div>
+                        <label className='form-label mt-3'>Tags:</label>
+                        <div className="d-flex flex-column">
+                            {tagOptions.map((tag) => (
+                                <div key={tag} className='d-flex'>
+                                    <input
+                                        type="checkbox"
+                                        name={tag}
+                                        checked={formData.tags.includes(tag)}
+                                        onChange={() => handleCheckboxChange(tag)}
+                                    />
+                                    <label className='mx-2'>{tag}</label>
+                                </div>
+                            ))}
+                        </div>
+                        <label className='form-label mt-3'>Published:</label>
+                        <input type="checkbox" name="published" className='mx-2' checked={formData.published} onChange={() => setFormData((prevFormData) => ({ ...prevFormData, published: !prevFormData.published }))} />
+                        <div>
                             <button className='btn btn-primary' type="submit">Submit</button>
                         </div>
                     </form>
@@ -60,12 +148,20 @@ const BlogForm = () => {
             <div className="row width-full">
                 <hr className='width-400' />
                 <ul className='list-unstyled width-full no-padding-left'>
+                    <EditModal
+                        show={showModal}
+                        handleClose={handleCloseModal}
+                        handleSave={handleSaveModalChanges}
+                        formData={formData}
+                        handleChange={handleChange}
+                        tagOptions={tagOptions}
+                        handleCheckboxChange={handleCheckboxChange}
+                    />
                     {articles.map((article) => (
                         <li key={article.id}>
                             {editingId === article.id ? (
-                                <div className='d-flex'>
-                                    <input type="text" className='form-control' value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
-                                    <button className='btn btn-primary px-3' onClick={() => handleSaveEdit(article.id)}>Save</button>
+                                <div className='d-flex flex-column'>
+                                    <button className='btn btn-primary px-3' onClick={handleSaveModalChanges}>Save</button>
                                 </div>
                             ) : (
                                 <div className='row my-1'>
