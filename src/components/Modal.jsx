@@ -14,7 +14,7 @@ const EditModal = ({ show, handleClose, handleSave, formData, handleChange, tagO
                     className="form-control"
                     id="title"
                     name="title"
-                    value={formData.title}
+                    defaultValue={formData.title}
                     onChange={handleChange}
                 />
             </div>
@@ -26,7 +26,7 @@ const EditModal = ({ show, handleClose, handleSave, formData, handleChange, tagO
                     className="form-control"
                     id="image"
                     name="image"
-                    value={formData.image}
+                    defaultValue={formData.image}
                     onChange={handleChange}
                 />
             </div>
@@ -37,7 +37,7 @@ const EditModal = ({ show, handleClose, handleSave, formData, handleChange, tagO
                     className="form-control"
                     id="content"
                     name="content"
-                    value={formData.content}
+                    defaultValue={formData.content}
                     onChange={handleChange}
                 ></textarea>
             </div>
@@ -48,10 +48,12 @@ const EditModal = ({ show, handleClose, handleSave, formData, handleChange, tagO
                     className="form-select"
                     id="category"
                     name="category"
-                    value={formData.category}
+                    defaultValue={formData.category}
                     onChange={handleChange}
                 >
                     <option value="uncategorized">Uncategorized</option>
+                    <option value="categoryone">Category 1</option>
+                    <option value="categorytwo">Category 2</option>
                 </select>
             </div>
 
@@ -62,7 +64,7 @@ const EditModal = ({ show, handleClose, handleSave, formData, handleChange, tagO
                         <input
                             type="checkbox"
                             name={tag}
-                            checked={formData.tags.includes(tag)}
+                            defaultChecked={formData.tags.includes(tag)}
                             onChange={() => handleCheckboxChange(tag)}
                         />
                         <label className='mx-2'>{tag}</label>
@@ -75,8 +77,8 @@ const EditModal = ({ show, handleClose, handleSave, formData, handleChange, tagO
                 <input
                     type="checkbox"
                     name="published"
-                    checked={formData.published}
-                    onChange={() => handleChange({ target: { name: 'published', value: !formData.published } })}
+                    defaultChecked={formData.published}
+                    onChange={handleChange}
                 />
             </div>
         </Modal.Body>

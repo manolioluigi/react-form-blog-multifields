@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import EditModal from './Modal';
 
@@ -12,6 +12,15 @@ const BlogForm = () => {
         tags: [],
         published: false,
     });
+    const [modalData, setModalData] = useState({
+        title: '',
+        image: '',
+        content: '',
+        category: 'uncategorized',
+        tags: [],
+        published: false,
+    });
+
     const [articles, setArticles] = useState([]);
     const [editingId, setEditingId] = useState(null);
     const [editTitle, setEditTitle] = useState('');
@@ -29,6 +38,14 @@ const BlogForm = () => {
         }));
     };
 
+    const handleModalChange = (e) => {
+        const { name, value } = e.target;
+        setModalData((prevModalData) => ({
+            ...prevModalData,
+            [name]: value,
+        }));
+    };
+
     const handleCheckboxChange = (tag) => {
         setFormData((prevFormData) => {
             const updatedTags = prevFormData.tags.includes(tag)
@@ -37,6 +54,19 @@ const BlogForm = () => {
 
             return {
                 ...prevFormData,
+                tags: updatedTags,
+            };
+        });
+    };
+
+    const handleCheckboxModalChange = (tag) => {
+        setModalData((prevModalData) => {
+            const updatedTags = prevModalData.tags.includes(tag)
+                ? prevModalData.tags.filter((t) => t !== tag)
+                : [...prevModalData.tags, tag];
+
+            return {
+                ...prevModalData,
                 tags: updatedTags,
             };
         });
@@ -68,34 +98,37 @@ const BlogForm = () => {
     const handleEdit = (id, currentArticle) => {
         setEditingId(id);
         setEditTitle(currentArticle.title);
-        setFormData({
-            title: currentArticle.title || '',  // Assicurati che il titolo non sia undefined
+        setModalData({
+            title: currentArticle.title || '',
             image: currentArticle.image || '',
             content: currentArticle.content || '',
             category: currentArticle.category || 'uncategorized',
             tags: currentArticle.tags || [],
             published: currentArticle.published || false,
         });
+        //console.log(currentArticle);
         handleShowModal();
     };
 
     const handleSaveModalChanges = () => {
+        console.log('Prima delle modifiche:', articles, editingId, modalData);
+
         setArticles((prevArticles) =>
             prevArticles.map((article) =>
-                article.id === editingId ? { ...article, ...formData } : article
+                article.id === editingId ? { ...article, ...modalData } : article
             )
         );
+
         setEditingId(null);
-        setFormData({
-            title: '',
-            image: '',
-            content: '',
-            category: 'uncategorized',
-            tags: [],
-            published: false,
-        });
         handleCloseModal();
+
+        console.log('Dopo le modifiche:', articles, editingId, modalData);
     };
+
+    useEffect(() => {
+        console.log('Modal Data cambiato:', modalData);
+    }, [modalData]);
+
 
 
     return (
@@ -120,6 +153,8 @@ const BlogForm = () => {
                         <div className='d-flex'>
                             <select className='form-select' name="category" value={formData.category} onChange={handleChange}>
                                 <option value="uncategorized">Uncategorized</option>
+                                <option value="categoryone">Category 1</option>
+                                <option value="categorytwo">Category 2</option>
                             </select>
                         </div>
                         <label className='form-label mt-3'>Tags:</label>
@@ -152,34 +187,28 @@ const BlogForm = () => {
                         show={showModal}
                         handleClose={handleCloseModal}
                         handleSave={handleSaveModalChanges}
-                        formData={formData}
-                        handleChange={handleChange}
+                        formData={modalData}
+                        handleChange={handleModalChange}
                         tagOptions={tagOptions}
-                        handleCheckboxChange={handleCheckboxChange}
+                        handleCheckboxChange={handleCheckboxModalChange}
                     />
                     {articles.map((article) => (
                         <li key={article.id}>
-                            {editingId === article.id ? (
-                                <div className='d-flex flex-column'>
-                                    <button className='btn btn-primary px-3' onClick={handleSaveModalChanges}>Save</button>
+                            <div className='row my-1'>
+                                <div className="col-9 no-padding">
+                                    <span className='mx-3'>{article.title}</span>
                                 </div>
-                            ) : (
-                                <div className='row my-1'>
-                                    <div className="col-9 no-padding">
-                                        <span className='mx-3'>{article.title}</span>
-                                    </div>
-                                    <div className="col-3 no-padding">
-                                        <div className='d-flex justify-content-end'>
-                                            <button className='btn btn-sm btn-warning' onClick={() => handleEdit(article.id, article.title)}>
-                                                <i className="fa-solid fa-edit"></i>
-                                            </button>
-                                            <button className='btn btn-sm btn-danger' onClick={() => handleDelete(article.id)}>
-                                                <i className="fa-solid fa-trash"></i>
-                                            </button>
-                                        </div>
+                                <div className="col-3 no-padding">
+                                    <div className='d-flex justify-content-end'>
+                                        <button className='btn btn-sm btn-warning' onClick={() => handleEdit(article.id, article)}>
+                                            <i className="fa-solid fa-edit"></i>
+                                        </button>
+                                        <button className='btn btn-sm btn-danger' onClick={() => handleDelete(article.id)}>
+                                            <i className="fa-solid fa-trash"></i>
+                                        </button>
                                     </div>
                                 </div>
-                            )}
+                            </div>
                             <hr className='width-400' />
                         </li>
                     ))}
